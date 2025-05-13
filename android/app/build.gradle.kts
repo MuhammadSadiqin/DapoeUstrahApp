@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.dapoeutsrahapp"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
+    buildToolsVersion = "35.0.1"
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
