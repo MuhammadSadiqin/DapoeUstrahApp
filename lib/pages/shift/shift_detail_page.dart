@@ -1,11 +1,12 @@
 import 'package:dapoeutsrahapp/controller/shift/shift_controller.dart';
-import 'package:dapoeutsrahapp/core/utils/format_util.dart';
 import 'package:dapoeutsrahapp/model/pengeluaran_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class ShiftDetailPage extends StatefulWidget {
   final String shiftId;
+
   const ShiftDetailPage({super.key, required this.shiftId});
 
   @override
@@ -15,10 +16,12 @@ class ShiftDetailPage extends StatefulWidget {
 class _ShiftDetailPageState extends State<ShiftDetailPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
   final pcsController = TextEditingController();
   final namaPengeluaranController = TextEditingController();
   final jumlahPengeluaranController = TextEditingController();
   final jumlahDibuatController = TextEditingController();
+  final controller = Get.find<ShiftController>();
 
   @override
   void initState() {
@@ -27,13 +30,156 @@ class _ShiftDetailPageState extends State<ShiftDetailPage>
   }
 
   @override
+  void dispose() {
+    pcsController.dispose();
+    namaPengeluaranController.dispose();
+    jumlahPengeluaranController.dispose();
+    jumlahDibuatController.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi"),
+          content: const Text("Yakin ingin menghapus data ini?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onConfirm();
+              },
+              child: const Text("Hapus"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditTransaksiDialog(
+    BuildContext context,
+    int index,
+    int currentValue,
+    String shiftId,
+  ) {
+    final controller = Get.find<ShiftController>();
+    final editController = TextEditingController(text: currentValue.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Jumlah Penjualan"),
+          content: TextField(
+            controller: editController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: "Jumlah pcs"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newValue = int.tryParse(editController.text);
+                if (newValue != null && newValue > 0) {
+                  controller.updateTransaksi(shiftId, index, newValue);
+                  Navigator.pop(context);
+                  setState(() {});
+                }
+              },
+              child: const Text("Simpan"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditPengeluaranDialog(
+    BuildContext context,
+    int index,
+    PengeluaranModel currentItem,
+    String shiftId,
+  ) {
+    final controller = Get.find<ShiftController>();
+    final namaController = TextEditingController(text: currentItem.nama);
+    final jumlahController = TextEditingController(
+      text: currentItem.jumlah.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Pengeluaran"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: namaController,
+                decoration: const InputDecoration(
+                  labelText: "Nama Pengeluaran",
+                ),
+              ),
+              TextField(
+                controller: jumlahController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Jumlah (Rp)"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newNama = namaController.text.trim();
+                final newJumlah = int.tryParse(jumlahController.text);
+                if (newNama.isNotEmpty && newJumlah != null && newJumlah > 0) {
+                  controller.updatePengeluaran(
+                    shiftId,
+                    index,
+                    PengeluaranModel(nama: newNama, jumlah: newJumlah),
+                  );
+                  Navigator.pop(context);
+                  setState(() {});
+                }
+              },
+              child: const Text("Simpan"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = Get.find<ShiftController>();
     final shift = controller.getShiftById(widget.shiftId);
 
+    final formatRupiah = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
     if (shift == null) {
       return const Scaffold(body: Center(child: Text("Shift tidak ditemukan")));
     }
+
+    jumlahDibuatController.text = shift.jumlahDibuat.toString();
 
     return Scaffold(
       appBar: AppBar(
@@ -86,14 +232,41 @@ class _ShiftDetailPageState extends State<ShiftDetailPage>
                       return ListTile(
                         leading: const Icon(Icons.shopping_cart),
                         title: Text("$jumlah pcs"),
-                        trailing: Text(FormatUtil.formatRupiah(jumlah * 1000)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                _showEditTransaksiDialog(
+                                  context,
+                                  index,
+                                  jumlah,
+                                  shift.id,
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                _showDeleteConfirmDialog(context, () {
+                                  controller.hapusTransaksi(shift.id, index);
+                                  Navigator.pop(context);
+                                  setState(() {});
+                                });
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
                 ),
                 const Divider(),
                 Text("Total Terjual: ${shift.totalBakpia} pcs"),
-                Text(FormatUtil.formatRupiah(shift.totalUangMasuk)),
+                Text(
+                  "Total Uang Masuk: ${formatRupiah.format(shift.totalUangMasuk)}",
+                ),
               ],
             ),
           ),
@@ -111,16 +284,22 @@ class _ShiftDetailPageState extends State<ShiftDetailPage>
                     decoration: const InputDecoration(
                       labelText: "Jumlah Kue Dibuat",
                     ),
+                    onSubmitted: (value) {
+                      final jumlah = int.tryParse(value);
+                      if (jumlah != null) {
+                        controller.updateJumlahDibuat(widget.shiftId, jumlah);
+                        setState(() {});
+                      }
+                    },
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      if (jumlahDibuatController.text.isEmpty) return;
-                      controller.updateJumlahDibuat(
-                        widget.shiftId,
-                        int.parse(jumlahDibuatController.text),
-                      );
-                      setState(() {});
+                      final jumlah = int.tryParse(jumlahDibuatController.text);
+                      if (jumlah != null) {
+                        controller.updateJumlahDibuat(widget.shiftId, jumlah);
+                        setState(() {});
+                      }
                     },
                     child: const Text("Simpan Jumlah Dibuat"),
                   ),
@@ -164,32 +343,44 @@ class _ShiftDetailPageState extends State<ShiftDetailPage>
                     "Daftar Pengeluaran:",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  ...shift.pengeluaran.map(
-                    (item) => ListTile(
+                  ...shift.pengeluaran.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    final item = entry.value;
+                    return ListTile(
                       title: Text(item.nama),
-                      trailing: Text(FormatUtil.formatRupiah(item.jumlah)),
-                    ),
-                  ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () {
+                              _showEditPengeluaranDialog(
+                                context,
+                                index,
+                                item,
+                                shift.id,
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              _showDeleteConfirmDialog(context, () {
+                                controller.hapusPengeluaran(shift.id, index);
+                                Navigator.pop(context);
+                                setState(() {});
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                   const Divider(),
-                  const Text(
-                    "Ringkasan Keuangan:",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    "Total Pengeluaran: ${formatRupiah.format(shift.totalPengeluaran)}",
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Total Pengeluaran"),
-                      Text(FormatUtil.formatRupiah(shift.totalPengeluaran)),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Sisa Uang"),
-                      Text(FormatUtil.formatRupiah(shift.sisaUang)),
-                    ],
-                  ),
+                  Text("Sisa Uang: ${formatRupiah.format(shift.sisaUang)}"),
                 ],
               ),
             ),

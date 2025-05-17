@@ -74,6 +74,85 @@ class ShiftController extends GetxController {
     }
   }
 
+  // Hapus transaksi
+  void hapusTransaksi(String shiftId, int index) {
+    final idx = shifts.indexWhere((s) => s.id == shiftId);
+    if (idx != -1) {
+      final cur = shifts[idx];
+      final updatedTransaksi = List<int>.from(cur.transaksi)..removeAt(index);
+      final updated = ShiftModel(
+        id: cur.id,
+        namaKasir: cur.namaKasir,
+        tanggal: cur.tanggal,
+        shift: cur.shift,
+        transaksi: updatedTransaksi,
+        pengeluaran: cur.pengeluaran,
+        jumlahDibuat: cur.jumlahDibuat,
+      );
+      shifts[idx] = updated;
+    }
+  }
+
+  // Update transaksi
+  void updateTransaksi(String shiftId, int index, int newJumlah) {
+    final idx = shifts.indexWhere((s) => s.id == shiftId);
+    if (idx != -1) {
+      final cur = shifts[idx];
+      final updatedTransaksi = List<int>.from(cur.transaksi);
+      updatedTransaksi[index] = newJumlah;
+      final updated = ShiftModel(
+        id: cur.id,
+        namaKasir: cur.namaKasir,
+        tanggal: cur.tanggal,
+        shift: cur.shift,
+        transaksi: updatedTransaksi,
+        pengeluaran: cur.pengeluaran,
+        jumlahDibuat: cur.jumlahDibuat,
+      );
+      shifts[idx] = updated;
+    }
+  }
+
+  // Hapus pengeluaran
+  void hapusPengeluaran(String shiftId, int index) {
+    final idx = shifts.indexWhere((s) => s.id == shiftId);
+    if (idx != -1) {
+      final cur = shifts[idx];
+      final updatedPengeluaran = List<PengeluaranModel>.from(cur.pengeluaran)
+        ..removeAt(index);
+      final updated = ShiftModel(
+        id: cur.id,
+        namaKasir: cur.namaKasir,
+        tanggal: cur.tanggal,
+        shift: cur.shift,
+        transaksi: cur.transaksi,
+        pengeluaran: updatedPengeluaran,
+        jumlahDibuat: cur.jumlahDibuat,
+      );
+      shifts[idx] = updated;
+    }
+  }
+
+  // Update pengeluaran
+  void updatePengeluaran(String shiftId, int index, PengeluaranModel newItem) {
+    final idx = shifts.indexWhere((s) => s.id == shiftId);
+    if (idx != -1) {
+      final cur = shifts[idx];
+      final updatedPengeluaran = List<PengeluaranModel>.from(cur.pengeluaran);
+      updatedPengeluaran[index] = newItem;
+      final updated = ShiftModel(
+        id: cur.id,
+        namaKasir: cur.namaKasir,
+        tanggal: cur.tanggal,
+        shift: cur.shift,
+        transaksi: cur.transaksi,
+        pengeluaran: updatedPengeluaran,
+        jumlahDibuat: cur.jumlahDibuat,
+      );
+      shifts[idx] = updated;
+    }
+  }
+
   // Cari shift berdasarkan ID
   ShiftModel? getShiftById(String id) {
     return shifts.firstWhereOrNull((s) => s.id == id);

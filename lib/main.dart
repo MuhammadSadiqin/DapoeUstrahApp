@@ -1,10 +1,11 @@
+import 'package:dapoeutsrahapp/config/routes/app_pages.dart';
+import 'package:dapoeutsrahapp/config/routes/app_routes.dart';
 import 'package:dapoeutsrahapp/controller/shift/shift_controller.dart';
 import 'package:dapoeutsrahapp/pages/shift/main_shift_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 void main() {
-  Get.put(ShiftController());
   runApp(const MyApp());
 }
 
@@ -15,11 +16,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MainShiftPage(),
+      debugShowCheckedModeBanner: false,
+      initialRoute: AppRoutes.getStarted,
+      getPages: AppPages.pages,
     );
   }
 }

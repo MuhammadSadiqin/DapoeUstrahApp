@@ -1,9 +1,8 @@
+import 'package:dapoeutsrahapp/config/routes/app_routes.dart';
 import 'package:dapoeutsrahapp/controller/shift/shift_controller.dart';
 import 'package:dapoeutsrahapp/core/utils/format_util.dart';
-import 'package:dapoeutsrahapp/pages/shift/shift_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'form_shift_page.dart';
 
 class MainShiftPage extends StatelessWidget {
   const MainShiftPage({super.key});
@@ -37,7 +36,7 @@ class MainShiftPage extends StatelessWidget {
                   ],
                 ),
                 onTap: () {
-                  Get.to(() => ShiftDetailPage(shiftId: shift.id));
+                  Get.toNamed(AppRoutes.shiftDetail, arguments: shift.id);
                 },
               ),
             );
@@ -46,7 +45,7 @@ class MainShiftPage extends StatelessWidget {
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.to(() => const FormShiftPage());
+          Get.toNamed(AppRoutes.formShift);
         },
         child: const Icon(Icons.add),
       ),
