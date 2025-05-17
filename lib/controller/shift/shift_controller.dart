@@ -1,160 +1,189 @@
 import 'package:dapoeutsrahapp/model/pengeluaran_model.dart';
 import 'package:dapoeutsrahapp/model/shift_model.dart';
+import 'package:dapoeutsrahapp/service/shift_service.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class ShiftController extends GetxController {
-  var shifts = <ShiftModel>[].obs;
-  final _uuid = Uuid();
+  final ShiftService _shiftService = ShiftService();
 
-  // Tambahkan shift baru
-  void tambahShift({
+  var shifts = <ShiftModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _listenShifts();
+  }
+
+  void _listenShifts() {
+    _shiftService.streamShifts().listen((data) {
+      shifts.value = data;
+    });
+  }
+
+  ShiftModel? getShiftById(String id) {
+    try {
+      return shifts.firstWhere((element) => element.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> saveShift(ShiftModel shift) async {
+    await _shiftService.saveShift(shift);
+  }
+
+  Future<void> deleteShift(String id) async {
+    await _shiftService.deleteShift(id);
+  }
+
+  Future<void> tambahTransaksi(String shiftId, int jumlah) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: shift.jumlahDibuat,
+        transaksi: [...shift.transaksi, jumlah],
+        pengeluaran: shift.pengeluaran,
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> updateTransaksi(String shiftId, int index, int newJumlah) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final List<int> updatedTransaksi = [...shift.transaksi];
+      updatedTransaksi[index] = newJumlah;
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: shift.jumlahDibuat,
+        transaksi: updatedTransaksi,
+        pengeluaran: shift.pengeluaran,
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> hapusTransaksi(String shiftId, int index) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final List<int> updatedTransaksi = [...shift.transaksi];
+      updatedTransaksi.removeAt(index);
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: shift.jumlahDibuat,
+        transaksi: updatedTransaksi,
+        pengeluaran: shift.pengeluaran,
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> tambahPengeluaran(
+    String shiftId,
+    PengeluaranModel pengeluaran,
+  ) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: shift.jumlahDibuat,
+        transaksi: shift.transaksi,
+        pengeluaran: [...shift.pengeluaran, pengeluaran],
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> updatePengeluaran(
+    String shiftId,
+    int index,
+    PengeluaranModel newPengeluaran,
+  ) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final List<PengeluaranModel> updatedPengeluaran = [...shift.pengeluaran];
+      updatedPengeluaran[index] = newPengeluaran;
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: shift.jumlahDibuat,
+        transaksi: shift.transaksi,
+        pengeluaran: updatedPengeluaran,
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> hapusPengeluaran(String shiftId, int index) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final List<PengeluaranModel> updatedPengeluaran = [...shift.pengeluaran];
+      updatedPengeluaran.removeAt(index);
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: shift.jumlahDibuat,
+        transaksi: shift.transaksi,
+        pengeluaran: updatedPengeluaran,
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> updateJumlahDibuat(String shiftId, int jumlah) async {
+    final shift = getShiftById(shiftId);
+    if (shift != null) {
+      final updated = ShiftModel(
+        id: shift.id,
+        namaKasir: shift.namaKasir,
+        tanggal: shift.tanggal,
+        shift: shift.shift,
+        jumlahDibuat: jumlah,
+        transaksi: shift.transaksi,
+        pengeluaran: shift.pengeluaran,
+      );
+      await saveShift(updated);
+    }
+  }
+
+  Future<void> tambahShift({
     required String namaKasir,
     required String shift,
     required DateTime tanggal,
-  }) {
+  }) async {
+    final id = const Uuid().v4(); // generate unique id untuk document Firestore
+
     final newShift = ShiftModel(
-      id: _uuid.v4(),
+      id: id,
       namaKasir: namaKasir,
-      tanggal: tanggal,
       shift: shift,
+      tanggal: DateFormat(
+        'yyyy-MM-dd',
+      ).format(tanggal), // simpan string tanggal rapi
+      transaksi: [],
+      pengeluaran: [],
+      jumlahDibuat: 0,
     );
 
-    shifts.add(newShift);
-  }
-
-  // Tambahkan transaksi ke shift tertentu
-  void tambahTransaksi(String shiftId, int jumlahPcs) {
-    final index = shifts.indexWhere((s) => s.id == shiftId);
-    if (index != -1) {
-      final current = shifts[index];
-      final updated = ShiftModel(
-        id: current.id,
-        namaKasir: current.namaKasir,
-        tanggal: current.tanggal,
-        shift: current.shift,
-        transaksi: [...current.transaksi, jumlahPcs],
-        pengeluaran: current.pengeluaran,
-      );
-      shifts[index] = updated;
-    }
-  }
-
-  // Tambahkan pengeluaran
-  void tambahPengeluaran(String shiftId, PengeluaranModel item) {
-    final index = shifts.indexWhere((s) => s.id == shiftId);
-    if (index != -1) {
-      final current = shifts[index];
-      final updated = ShiftModel(
-        id: current.id,
-        namaKasir: current.namaKasir,
-        tanggal: current.tanggal,
-        shift: current.shift,
-        transaksi: current.transaksi,
-        pengeluaran: [...current.pengeluaran, item],
-      );
-      shifts[index] = updated;
-    }
-  }
-
-  void updateJumlahDibuat(String shiftId, int jumlah) {
-    final index = shifts.indexWhere((s) => s.id == shiftId);
-    if (index != -1) {
-      final current = shifts[index];
-      final updated = ShiftModel(
-        id: current.id,
-        namaKasir: current.namaKasir,
-        tanggal: current.tanggal,
-        shift: current.shift,
-        transaksi: current.transaksi,
-        pengeluaran: current.pengeluaran,
-        jumlahDibuat: jumlah,
-      );
-      shifts[index] = updated;
-    }
-  }
-
-  // Hapus transaksi
-  void hapusTransaksi(String shiftId, int index) {
-    final idx = shifts.indexWhere((s) => s.id == shiftId);
-    if (idx != -1) {
-      final cur = shifts[idx];
-      final updatedTransaksi = List<int>.from(cur.transaksi)..removeAt(index);
-      final updated = ShiftModel(
-        id: cur.id,
-        namaKasir: cur.namaKasir,
-        tanggal: cur.tanggal,
-        shift: cur.shift,
-        transaksi: updatedTransaksi,
-        pengeluaran: cur.pengeluaran,
-        jumlahDibuat: cur.jumlahDibuat,
-      );
-      shifts[idx] = updated;
-    }
-  }
-
-  // Update transaksi
-  void updateTransaksi(String shiftId, int index, int newJumlah) {
-    final idx = shifts.indexWhere((s) => s.id == shiftId);
-    if (idx != -1) {
-      final cur = shifts[idx];
-      final updatedTransaksi = List<int>.from(cur.transaksi);
-      updatedTransaksi[index] = newJumlah;
-      final updated = ShiftModel(
-        id: cur.id,
-        namaKasir: cur.namaKasir,
-        tanggal: cur.tanggal,
-        shift: cur.shift,
-        transaksi: updatedTransaksi,
-        pengeluaran: cur.pengeluaran,
-        jumlahDibuat: cur.jumlahDibuat,
-      );
-      shifts[idx] = updated;
-    }
-  }
-
-  // Hapus pengeluaran
-  void hapusPengeluaran(String shiftId, int index) {
-    final idx = shifts.indexWhere((s) => s.id == shiftId);
-    if (idx != -1) {
-      final cur = shifts[idx];
-      final updatedPengeluaran = List<PengeluaranModel>.from(cur.pengeluaran)
-        ..removeAt(index);
-      final updated = ShiftModel(
-        id: cur.id,
-        namaKasir: cur.namaKasir,
-        tanggal: cur.tanggal,
-        shift: cur.shift,
-        transaksi: cur.transaksi,
-        pengeluaran: updatedPengeluaran,
-        jumlahDibuat: cur.jumlahDibuat,
-      );
-      shifts[idx] = updated;
-    }
-  }
-
-  // Update pengeluaran
-  void updatePengeluaran(String shiftId, int index, PengeluaranModel newItem) {
-    final idx = shifts.indexWhere((s) => s.id == shiftId);
-    if (idx != -1) {
-      final cur = shifts[idx];
-      final updatedPengeluaran = List<PengeluaranModel>.from(cur.pengeluaran);
-      updatedPengeluaran[index] = newItem;
-      final updated = ShiftModel(
-        id: cur.id,
-        namaKasir: cur.namaKasir,
-        tanggal: cur.tanggal,
-        shift: cur.shift,
-        transaksi: cur.transaksi,
-        pengeluaran: updatedPengeluaran,
-        jumlahDibuat: cur.jumlahDibuat,
-      );
-      shifts[idx] = updated;
-    }
-  }
-
-  // Cari shift berdasarkan ID
-  ShiftModel? getShiftById(String id) {
-    return shifts.firstWhereOrNull((s) => s.id == id);
+    await _shiftService.saveShift(newShift);
   }
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "825497727938",
+    "project_id": "dapoeutsrahapp",
+    "storage_bucket": "dapoeutsrahapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825497727938:android:c98257f18f0337b816dc5b",
+        "android_client_info": {
+          "package_name": "com.example.dapoeutsrahapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSQvKI8j_LrrU7amu_KhFs7tJYWop7U9w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

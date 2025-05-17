@@ -49,7 +49,7 @@ class GetStartedPage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.toNamed(AppRoutes.mainShift);
+                    Get.toNamed(AppRoutes.login);
                   },
                   child: Text(
                     "Login",
@@ -73,7 +73,7 @@ class GetStartedPage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Get.to(AppRoutes.mainShift);
+                    Get.toNamed(AppRoutes.register);
                   },
                   child: Text(
                     "Daftar",

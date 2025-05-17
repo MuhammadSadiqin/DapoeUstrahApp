@@ -9,40 +9,29 @@ class MainShiftPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ShiftController>();
-
     return Scaffold(
       appBar: AppBar(title: const Text("Daftar Shift Penjualan")),
       body: Obx(() {
+        final controller = Get.find<ShiftController>();
         if (controller.shifts.isEmpty) {
-          return const Center(child: Text("Belum ada shift hari ini"));
+          return const Center(child: Text("Belum ada data shift"));
         }
-
         return ListView.builder(
           itemCount: controller.shifts.length,
           itemBuilder: (context, index) {
             final shift = controller.shifts[index];
-
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                title: Text("${shift.namaKasir} - ${shift.shift}"),
-                subtitle: Text("Tanggal: ${shift.tanggalFormatted}"),
-                trailing: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text("Total: ${shift.totalBakpia} pcs"),
-                    Text(FormatUtil.formatRupiah(shift.totalUangMasuk)),
-                  ],
-                ),
-                onTap: () {
-                  Get.toNamed(AppRoutes.shiftDetail, arguments: shift.id);
-                },
-              ),
+            return ListTile(
+              title: Text("${shift.namaKasir} - ${shift.shift}"),
+              subtitle: Text("Tanggal: ${shift.tanggal}"),
+              trailing: Text(FormatUtil.formatRupiah(shift.sisaUang)),
+              onTap: () {
+                Get.toNamed(AppRoutes.shiftDetail, arguments: shift.id);
+              },
             );
           },
         );
       }),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Get.toNamed(AppRoutes.formShift);
